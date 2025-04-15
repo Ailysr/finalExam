@@ -13,6 +13,9 @@ class ODE {
 public:
     virtual ~ODE() = default;
     virtual valarray<double> f(const valarray<double>& x, double t) = 0;
+
+    // 添加 output 方法为纯虚函数
+    virtual double output(const valarray<double>& x, double t) = 0;
     //作用是计算在给定状态 x 、时间 t 和输入u下的导数或变化率
     void setInputFunction(function<double(double)> inputFunc) {
         u = inputFunc;
@@ -43,9 +46,7 @@ public:
     TransferFunction(const valarray<valarray<double>>& A, const valarray<double>& B, const valarray<double>& C, double D);
     valarray<double> f(const valarray<double>& x, double t) override;
 	// 计算状态空间模型的输出
-    double output(const valarray<double>& x, double t) {
-		return (C * x).sum() + D * u(t);
-	}
+    double output(const valarray<double>& x, double t) override;
     // 添加 getter 方法
     const valarray<valarray<double>>& getA() const { return A; }
     const valarray<double>& getB() const { return B; }
@@ -53,8 +54,20 @@ public:
     double getD() const { return D; }
 };
 
-class SimpleODE : public ODE {
-public:
-    valarray<double> f(const valarray<double>& x, double t) override;
+class SimpleODE : public ODE {  
+private:  
+    valarray<double> coefficients; // 存储微分方程的系数，例如 {a0, a1, ..., an}
+    valarray<double> numerator;
+    valarray<double> denominator;
+    valarray<valarray<double>> A;
+    valarray<double> B;
+    valarray<double> C;
+    double D;
+    //void ode2StateSpace(coefficients);
+public:  
+    SimpleODE(const valarray<double>& coeffs);
+    valarray<double> f(const valarray<double>& x, double t) override;  
+    double output(const valarray<double>& x, double t) override; 
 };
+
 

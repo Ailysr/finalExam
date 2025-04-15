@@ -100,3 +100,9 @@ void RungeKuttaSolver::integrate(ODE* ode, double dt, valarray<double>& x) {
     current_time += dt;
 }
 
+void EulerSolver::integrate(ODE* ode, double dt, valarray<double>& x) {
+    valarray<double> f_curr = ode->f(x, current_time);
+    x += f_curr * dt;
+    current_time += dt;
+};
+

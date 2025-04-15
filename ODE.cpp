@@ -49,7 +49,7 @@ pair<valarray<double>, valarray<double>> TransferFunction::polynomialDivision(
     size_t remainder_start = deg_num - deg_den + 1;
     valarray<double> real_remainder = remainder[remainder_start != remainder.size() ? slice(remainder_start, remainder.size() - remainder_start, 1) : slice(0, 0, 1)];
 
-    return { quotient, real_remainder };
+    return {quotient, real_remainder };
 }
 
 void TransferFunction::tf2StateSpace() {
@@ -117,10 +117,39 @@ valarray<double> TransferFunction::f(const valarray<double>& x, double t) {
    }
    return dxdt;
 }
+double TransferFunction::output(const valarray<double>& x, double t) {
+    return (C * x).sum() + D * u(t);
+};
+
+
+SimpleODE::SimpleODE(const valarray<double>& coefficients) : coefficients(coefficients) {
+	if (coefficients.size() == 0) {
+		throw invalid_argument("Coefficients must have at least one element");
+	}
+	numerator = valarray<double>{ 1.0 }; // 分子为1
+	denominator = coefficients; // 分母为微分方程的系数
+	TransferFunction tf(numerator, denominator); // 通过分子分母多项式的构造函数，自然会转化为状态空间模型
+	// 通过状态空间矩阵的构造函数
+	A = tf.getA();
+	B = tf.getB();
+	C = tf.getC();
+	D = tf.getD();
+}
+
 
 valarray<double> SimpleODE::f(const valarray<double>& x, double t) {
-   double input = u(t);
-   valarray<double> result(x.size());
-   result[0] = x[0] + input;
-   return result;
+    double input = u(t);
+    valarray<double> dxdt(x.size());
+
+    for (size_t i = 0; i < x.size(); ++i) {
+        dxdt[i] = 0.0;
+        for (size_t j = 0; j < x.size(); ++j) {
+            dxdt[i] += A[i][j] * x[j];
+        }
+        dxdt[i] += B[i] * input;
+    }
+    return dxdt;
 }
+double SimpleODE::output(const valarray<double>& x, double t) {// 输出可以是状态变量的某种组合，例如直接返回 x[0]（位置）
+    return (C * x).sum() + D * u(t);
+};

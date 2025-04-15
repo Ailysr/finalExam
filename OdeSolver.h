@@ -33,6 +33,12 @@ public:
 };
 
 class EulerSolver : public OdeSolver {
+    //œ‘ æ≈∑¿≠∑®
 private:
 	double current_time = 0.0;
+
+public:
+	EulerSolver() {};
+	void integrate(ODE* ode, double dt, valarray<double>& x) override;
+    
 };
