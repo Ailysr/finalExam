@@ -72,6 +72,7 @@ int main(int argc, char* argv[]) {
         }
         cout << "Output = " << y << endl;
     }//这是dev新版
+    //dev第二版
 
     // 清理资源
     delete ode;
