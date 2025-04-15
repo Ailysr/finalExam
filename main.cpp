@@ -1,109 +1,81 @@
 #include <iostream>
+#include <string>
 #include <valarray>
-#include <vector>
-#include <fstream>
-#include <cmath>
 #include "ODE.h"
 #include "OdeSolver.h"
 
 using namespace std;
 
-void writeToFile(ofstream& outfile, double time, const valarray<double>& x ,double y) {
-    outfile << time << ",";
-	size_t n = x.size();
-    for (size_t i = 0; i < n; i++) {
-        outfile << x[i] ;
-		if (i < n - 1) {
-			outfile << ",";
-		}
-    }
+int main(int argc, char* argv[]) {
+    // 默认设置
+    string solverType = "RungeKutta";  // 默认求解器
+    string problemType = "TransferFunction";  // 默认问题类型
 
-    outfile << "," << y << "\n";
-}
-
-void showABCD(TransferFunction ode) {
-    // 获取并打印矩阵 A
-    const valarray<valarray<double>>& A = ode.getA();
-    cout << "Matrix A:" << endl;
-    for (const auto& row : A) {
-        for (double val : row) {
-            cout << val << " ";
+    // 解析命令行参数
+    for (int i = 1; i < argc; ++i) {
+        string arg = argv[i];
+        if (arg == "--solver" && i + 1 < argc) {
+            solverType = argv[++i];
         }
-        cout << endl;
+        else if (arg == "--problem" && i + 1 < argc) {
+            problemType = argv[++i];
+        }
+        else {
+            cerr << "Unknown argument: " << arg << endl;
+            return 1;
+        }
     }
 
-    // 获取并打印矩阵 B
-    const valarray<double>& B = ode.getB();
-    cout << "Matrix B:" << endl;
-    for (double val : B) {
-        cout << val << "";
+    // 根据 problemType 初始化问题
+    ODE* ode = nullptr;
+    if (problemType == "TransferFunction") {
+        valarray<double> numerator = { 1.0, -2.6, -1.092, -0.02077, 0.0 };
+        valarray<double> denominator = { 1.0, 0.72, 1.834, 0.0364, 0.001666 };
+        ode = new TransferFunction(numerator, denominator);
     }
-    cout << endl;
-
-    // 获取并打印矩阵 C
-    const valarray<double>& C = ode.getC();
-    cout << "Matrix C:" << endl;
-    for (double val : C) {
-        cout << val << " ";
+    else if (problemType == "SimpleODE") {
+        ode = new SimpleODE();
     }
-    cout << endl;
-
-    // 获取并打印 D
-    double D = ode.getD();
-    cout << "D: " << D << endl;
-}
-
-double u(double t) {
-    // 根据需要定义输入信号 u(t)
-	
-    return (t);
-}
-
-int main() {
-    // 定义状态空间矩阵
-    valarray<valarray<double>> A = { valarray<double>{-0.02, -0.1, 0, -9.8},
-                                     valarray<double>{-0.001, -0.4, 1, 0},
-                                     valarray<double>{0.0, -1.7,  -0.3, 0}, 
-                                     valarray<double>{0, 0, 1, 0 }
-    };
-    valarray<double> B = { 0, 0, -2.6, 0};
-    valarray<double> C = { 1, 0, 0, 0 };
-    double D = 0;
-    TransferFunction ode(A,B,C,D);
-    ode.setInputFunction(u);  // 设置输入信号
-    valarray<double> x = { 0, 0, 0, 0};  // 初始状态
-	double y = 0;  // 初始输出
-
-	RungeKuttaSolver solver(4);  //选择微分方程求解器：RungeKuttaSolver/AdamsSolver
-    
-    double dt = 0.1;  // 时间步长
-
-    int steps = 100;  // 仿真100步
-
-    // 创建输出文件
-    ofstream outfile("D:/Research/课程/研一/飞行仿真技术/homework/Transfer_RK4.csv");
-    if (!outfile.is_open()) {
-        cerr << "Error opening file for writing" << endl;
+    else {
+        cerr << "Unknown problem type: " << problemType << endl;
         return 1;
     }
-    //写入文件头
-    outfile << "Time,State\n";
-    writeToFile(outfile, 0, x, y);
-    for (int i = 1; i <= steps; ++i) {
-        solver.integrate(&ode, dt, x);
-		y = ode.output(x, i * dt);  // 计算输出
-        cout << "Step " << i << ": ";
+
+    // 设置输入函数
+    ode->setInputFunction([](double t) { return 1.0; });
+
+    // 根据 solverType 初始化求解器
+    OdeSolver* solver = nullptr;
+    if (solverType == "RungeKutta") {
+        solver = new RungeKuttaSolver(4);
+    }
+    else if (solverType == "Adams") {
+        solver = new AdamsSolver(4);
+    }
+    else {
+        cerr << "Unknown solver type: " << solverType << endl;
+        return 1;
+    }
+
+    // 仿真设置
+    valarray<double> x = { 0, 0, 0, 0 };  // 初始状态
+    double dt = 0.1;  // 时间步长
+    int steps = 100;  // 仿真步数
+
+    // 仿真循环
+    for (int i = 0; i < steps; ++i) {
+        solver->integrate(ode, dt, x);
+        double y = ode.output(x, i * dt);
+        cout << "Step " << i << ": State = ";
         for (double xi : x) {
             cout << xi << " ";
         }
-		cout <<  y << endl;
-        cout << "\n" << endl;
+        cout << "Output = " << y << endl;
+    }//这是dev新版
 
-        // 写入文件
-        writeToFile(outfile, i * dt, x, y);
-    }
-    // 关闭文件
-    outfile.close();
-    showABCD(ode);
+    // 清理资源
+    delete ode;
+    delete solver;
+
     return 0;
 }
