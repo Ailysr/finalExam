@@ -130,6 +130,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ODE.cpp" />
     <ClCompile Include="OdeSolver.cpp" />
+    <ClCompile Include="parseXML.h" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ODE.h" />

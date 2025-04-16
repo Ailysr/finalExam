@@ -46,6 +46,9 @@ void AdamsSolver::integrate(ODE* ode, double dt, valarray<double>& x) {
 
 void RungeKuttaSolver::integrate(ODE* ode, double dt, valarray<double>& x) {
     // Implement the Runge-Kutta integration method here
+    if (order < 1 || order > 4) {
+        throw invalid_argument("Unsupported order, order must be between 1 and 4");
+    }
     size_t n = order;
     vector<valarray<double>> k(n, valarray<double>(x.size()));
     vector<double> c(n), a(n * n), b(n);

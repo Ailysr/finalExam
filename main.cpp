@@ -1,12 +1,21 @@
+#include "parseXML.h"
 #include <iostream>
 #include <valarray>
 #include <vector>
 #include <fstream>
 #include <cmath>
+#include <string>
+#include <stdexcept>
+#include <memory>
 #include "ODE.h"
 #include "OdeSolver.h"
 
 using namespace std;
+
+static double u(double t)
+{
+	return sin(t); // 输入函数 u(t)
+};
 
 static void writeToFile(ofstream& outfile, double time, const valarray<double>& x, double y) {
     outfile << time << ",";
@@ -21,91 +30,150 @@ static void writeToFile(ofstream& outfile, double time, const valarray<double>& 
     outfile << "," << y << "\n";
 }
 
-static void showABCD(TransferFunction ode) {
-    // 获取并打印矩阵 A
-    const valarray<valarray<double>>& A = ode.getA();
-    cout << "Matrix A:" << endl;
-    for (const auto& row : A) {
-        for (double val : row) {
-            cout << val << " ";
+int main(int argc, char* argv[]) {
+    // 定义变量
+    string selectedProblemType;
+    vector<double> coefficients;
+    vector<double> numerator;
+    vector<double> denominator;
+    vector<vector<double>> A;
+    vector<double> B;
+    vector<double> C;
+    double D = 0.0;
+    vector<double> initialState;
+    double dt = 0.05;
+    int steps = 200;
+    int solverOrder = 4;  //默认值
+    string solverType = "RungeKutta";
+    string resultPath = "SimulationResults.csv";
+
+    // 解析命令行参数
+    string xmlFile;
+    for (int i = 1; i < argc; ++i) {
+        string arg = argv[i];
+        if (arg == "-x" && i + 1 < argc) {
+            xmlFile = argv[++i];
+        }
+    }
+
+    if (xmlFile.empty()) {
+        cerr << "No XML configuration file provided. Use -x <file> to specify the XML file." << endl;
+        return 1;
+    }
+
+    try {
+        // 调用 parseXML 函数解析 XML 文件
+        parseXML(xmlFile, selectedProblemType, coefficients, numerator, denominator, A, B, C, D, initialState, dt, steps, solverOrder, solverType, resultPath);
+    }
+    catch (const exception& e) {
+        cerr << "Error parsing XML: " << e.what() << endl;
+        return 1;
+    }
+
+    // 根据 selectedProblemType 创建对应的 ODE 对象
+    unique_ptr<ODE> ode;
+    if (selectedProblemType == "SimpleODE") {
+        //cout << "Coefficients size: " << coefficients.size() << endl;
+        //cout << "Initial state size: " << initialState.size() << endl;
+        if (coefficients.empty()) {
+            cerr << "Error: Missing coefficients for SimpleODE." << endl;
+            return 1;
+        }
+        ode = make_unique<SimpleODE>(valarray<double>(coefficients.data(), coefficients.size()));
+    }
+    else if (selectedProblemType == "TransferFunction") {
+        if (numerator.empty() || denominator.empty()) {
+            cerr << "Error: Missing numerator or denominator for TransferFunction." << endl;
+            return 1;
+        }
+        ode = make_unique<TransferFunction>(valarray<double>(numerator.data(), numerator.size()), valarray<double>(denominator.data(), denominator.size()));
+        cout << "*****************************" << endl;
+        // 获取并打印 A 矩阵
+        const auto& A = dynamic_cast<TransferFunction*>(ode.get())->getA();
+        const auto& B = dynamic_cast<TransferFunction*>(ode.get())->getB();
+        const auto& C = dynamic_cast<TransferFunction*>(ode.get())->getC();
+        const auto& D = dynamic_cast<TransferFunction*>(ode.get())->getD();
+        cout << "Matrix A:" << endl;
+        for (const auto& row : A) {
+            for (const auto& value : row) {
+                cout << value << " ";
+            }
+            cout << endl;
+        }
+        cout << "Matrix B:" << endl;
+        for (const auto& value : B) {
+            cout << value << " ";
         }
         cout << endl;
+        cout << "Matrix C:" << endl;
+        for (const auto& value : C) {
+            cout << value << " ";
+        }
+        cout << endl;
+        cout << "Matrix D:" << endl;
+        cout << D << endl;
+        cout << "*****************************" << endl;
+    }
+    else if (selectedProblemType == "StateSpace") {
+        if (A.empty() || B.empty() || C.empty()) {
+            cerr << "Error: Missing state-space matrices for StateSpace." << endl;
+            return 1;
+        }
+        valarray<valarray<double>> stateSpaceA(A.size());
+        for (size_t i = 0; i < A.size(); ++i) {
+            stateSpaceA[i] = valarray<double>(A[i].data(), A[i].size());
+        }
+        ode = make_unique<TransferFunction>(stateSpaceA, valarray<double>(B.data(), B.size()), valarray<double>(C.data(), C.size()), D);
+    }
+    else {
+        cerr << "Error: Unsupported problem type: " << selectedProblemType << endl;
+        return 1;
     }
 
-    // 获取并打印矩阵 B
-    const valarray<double>& B = ode.getB();
-    cout << "Matrix B:" << endl;
-    for (double val : B) {
-        cout << val << "";
+    // 设置输入函数 u(t)
+    ode->setInputFunction(u);
+
+    // 选择求解器
+    unique_ptr<OdeSolver> solver;
+    if (solverType == "Adams") {
+        solver = make_unique<AdamsSolver>(solverOrder);
     }
-    cout << endl;
-
-    // 获取并打印矩阵 C
-    const valarray<double>& C = ode.getC();
-    cout << "Matrix C:" << endl;
-    for (double val : C) {
-        cout << val << " ";
+    else if (solverType == "RungeKutta") {
+        solver = make_unique<RungeKuttaSolver>(solverOrder);
     }
-    cout << endl;
+    else if (solverType == "Euler") {
+        solver = make_unique<EulerSolver>();
+    }
+    else {
+        cerr << "Unsupported solver type: " << solverType << endl;
+        return 1;
+    }
 
-    // 获取并打印 D
-    double D = ode.getD();
-    cout << "D: " << D << endl;
-}
+    // 打开输出文件
+    ofstream outfile(resultPath);
+    if (!outfile.is_open()) {
+        cerr << "Error opening file for writing: " << resultPath << endl;
+        return 1;
+    }
 
-static double u(double t) {
-    // 根据需要定义输入信号 u(t)
+    // 写入文件头
+    outfile << "Time,State";
+    int order = ode->getOrder();
+	for (int i = 0; i < order; ++i) {
+		outfile << ",";
+	}
+	outfile << "Output\n";
+    writeToFile(outfile, 0, valarray<double>(initialState.data(), initialState.size()), initialState[0]);
 
-    return (2);
-}
+    // 仿真循环
+    valarray<double> x(initialState.data(), initialState.size());
+    for (int i = 1; i <= steps; ++i) {
+        solver->integrate(ode.get(), dt, x);
+        double y = ode->output(x, i * dt);
+        writeToFile(outfile, i * dt, x, y);
+    }
 
-int main() {
-   // 定义三阶微分方程的系数，例如：a3 * x''' + a2 * x'' + a1 * x' + a0 * x = 0
-   valarray<double> coefficients = { 1.0 ,0.7 ,1 }; // 示例系数
-
-   // 创建 SimpleODE 对象
-   SimpleODE simpleOde(coefficients);
-
-   // 设置输入信号 u(t)
-   simpleOde.setInputFunction(u);
-
-   // 定义初始状态
-   valarray<double> x = { 0.0 ,0.0}; // 初始状态向量
-   double y = x[0]; // 初始输出
-
-   // 选择微分方程求解器
-   RungeKuttaSolver solver(4); // 修复：去掉括号，创建对象而不是函数指针
-   //EulerSolver solver;
-   double dt = 0.05; // 时间步长
-   int steps = 200; // 仿真 100 步
-
-   // 创建输出文件
-   ofstream outfile("D:\\Research\\课程\\研一\\飞行仿真技术\\homework\\SimpleODE_RK4.csv");
-   if (!outfile.is_open()) {
-       cerr << "Error opening file for writing" << endl;
-       return 1;
-   }
-
-   // 写入文件头
-   outfile << "Time,State,Output\n";
-   writeToFile(outfile, 0, x, y);
-
-   // 仿真循环
-   for (int i = 1; i <= steps; ++i) {
-       solver.integrate(&simpleOde, dt, x); // 使用求解器计算下一步状态
-       y = simpleOde.output(x, i * dt);    // 计算输出
-       cout << "Step " << i << ": ";
-       for (double xi : x) {
-           cout << xi << " ";
-       }
-       cout << y << endl;
-
-       // 写入文件
-       writeToFile(outfile, i * dt, x, y);
-   }
-
-   // 关闭文件
-   outfile.close();
-
-   return 0;
+    outfile.close();
+    cout << "Simulation completed. Results saved to: " << resultPath << endl;
+    return 0;
 }

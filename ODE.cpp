@@ -8,11 +8,13 @@ TransferFunction::TransferFunction(const valarray<double>& numerator, const vala
    if (denominator.size() == 0) {
        throw invalid_argument("Denominator must have at least one element");
    }
+   order = denominator.size() - 1; // 阶数
    tf2StateSpace();
 }
 // 通过状态空间矩阵的构造函数
 TransferFunction::TransferFunction(const valarray<valarray<double>>& A, const valarray<double>& B, const valarray<double>& C, double D)
     : A(A), B(B), C(C), D(D) {
+    order = A.size(); // 阶数,A一定是方阵
 }
 
 pair<valarray<double>, valarray<double>> TransferFunction::polynomialDivision(
@@ -85,7 +87,7 @@ void TransferFunction::tf2StateSpace() {
     // 填充矩阵 B
     for (size_t i = 0; i < n; ++i) {
         if (i == n - 1) {
-            B[i] = 1.0 / denominator[0];
+            B[i] = 1.0 ;
         }
         else {
             B[i] = 0.0;
@@ -126,6 +128,7 @@ SimpleODE::SimpleODE(const valarray<double>& coefficients) : coefficients(coeffi
 	if (coefficients.size() == 0) {
 		throw invalid_argument("Coefficients must have at least one element");
 	}
+	order = coefficients.size() - 1; // 阶数
 	numerator = valarray<double>{ 1.0 }; // 分子为1
 	denominator = coefficients; // 分母为微分方程的系数
 	TransferFunction tf(numerator, denominator); // 通过分子分母多项式的构造函数，自然会转化为状态空间模型
@@ -138,6 +141,10 @@ SimpleODE::SimpleODE(const valarray<double>& coefficients) : coefficients(coeffi
 
 
 valarray<double> SimpleODE::f(const valarray<double>& x, double t) {
+
+    if ((coefficients.size()-1) != x.size()) {
+        throw invalid_argument("Size of coefficients must match the size of the state vector.");
+    }
     double input = u(t);
     valarray<double> dxdt(x.size());
 

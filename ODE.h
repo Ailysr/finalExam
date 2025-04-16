@@ -6,6 +6,7 @@
 #include <stdexcept>
 #include <map>
 #include <algorithm>
+#include <iostream>
 
 using namespace std;
 
@@ -20,6 +21,7 @@ public:
     void setInputFunction(function<double(double)> inputFunc) {
         u = inputFunc;
     }
+    virtual int getOrder() const = 0; // 添加虚函数，获得问题阶数
 protected:
 	function<double(double)> u; // 输入函数
 };
@@ -32,6 +34,7 @@ private:
     valarray<double> B;
     valarray<double> C;
     double D;
+	int order;//阶数
 
 	void tf2StateSpace();
     //多项式相除函数
@@ -52,6 +55,7 @@ public:
     const valarray<double>& getB() const { return B; }
     const valarray<double>& getC() const { return C; }
     double getD() const { return D; }
+    int getOrder() const override { return order; } // 实现 getOrder
 };
 
 class SimpleODE : public ODE {  
@@ -63,11 +67,13 @@ private:
     valarray<double> B;
     valarray<double> C;
     double D;
+    int order;//阶数
     //void ode2StateSpace(coefficients);
 public:  
     SimpleODE(const valarray<double>& coeffs);
     valarray<double> f(const valarray<double>& x, double t) override;  
     double output(const valarray<double>& x, double t) override; 
+    int getOrder() const override { return order; } // 实现 getOrder
 };
 
 
