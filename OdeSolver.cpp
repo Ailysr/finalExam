@@ -7,7 +7,7 @@ AdamsSolver::AdamsSolver(int order) : order(order) {
     if (order < 1 || order > 8) {
         throw invalid_argument("Unsupported order, order must be between 1 and 8");
     }
-	//显式Adams-Bashforth方法的系数
+    //显式Adams-Bashforth方法的系数
     coefficients = {
         {1.0},
         {1.5, -0.5},
@@ -53,18 +53,18 @@ void RungeKuttaSolver::integrate(ODE* ode, double dt, valarray<double>& x) {
     vector<valarray<double>> k(n, valarray<double>(x.size()));
     vector<double> c(n), a(n * n), b(n);
     switch (order) {
-	case 1:
-		c = { 0.0 };
-		a = { 0.0 };
-		b = { 1.0 };
-		break;
-	case 2:
-		c = { 0.0, 0.5 };
-		a = { 0.0, 0.5, 
+    case 1:
+        c = { 0.0 };
+        a = { 0.0 };
+        b = { 1.0 };
+        break;
+    case 2:
+        c = { 0.0, 0.5 };
+        a = { 0.0, 0.5, 
             0.0, 0.0 
         };
-		b = { 0.0, 1.0 };
-		break;
+        b = { 0.0, 1.0 };
+        break;
 
     case 3:
         c = { 0.0, 0.5, 1.0 };
@@ -84,9 +84,9 @@ void RungeKuttaSolver::integrate(ODE* ode, double dt, valarray<double>& x) {
             0.0, 0.0, 1.0, 0.0    // k4 依赖 k3（系数 1.0）
         };
         b = { 1.0 / 6.0, 1.0 / 3.0, 1.0 / 3.0, 1.0 / 6.0 };
-		break;
-	default:
-		throw invalid_argument("Unsupported order, order must be between 1 and 4");
+        break;
+    default:
+        throw invalid_argument("Unsupported order, order must be between 1 and 4");
     }
     for (size_t i = 0; i < n; ++i) {
         valarray<double> y_temp = x;

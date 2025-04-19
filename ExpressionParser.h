@@ -119,7 +119,6 @@ private:
                 if (id == "cos") return cos(arg);
                 if (id == "exp") return exp(arg);
                 if (id == "log") return log(arg);
-				//帮我添加更多的函数
 				if (id == "tan") return tan(arg);
 				if (id == "sqrt") return sqrt(arg);
 				if (id == "abs") return abs(arg);
