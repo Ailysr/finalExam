@@ -41,6 +41,7 @@ int main(int argc, char* argv[]) {
     vector<double> C;
     double D = 0.0;
     vector<double> initialState;
+    function<double(double)> inputFunction = u;
     double dt = 0.05;
     int steps = 200;
     int solverOrder = 4;  //默认值
@@ -63,7 +64,7 @@ int main(int argc, char* argv[]) {
 
     try {
         // 调用 parseXML 函数解析 XML 文件
-        parseXML(xmlFile, selectedProblemType, coefficients, numerator, denominator, A, B, C, D, initialState, dt, steps, solverOrder, solverType, resultPath);
+        parseXML(xmlFile, selectedProblemType, coefficients, numerator, denominator, A, B, C, D, initialState, dt, steps, solverOrder, solverType, resultPath, inputFunction);
     }
     catch (const exception& e) {
         cerr << "Error parsing XML: " << e.what() << endl;
@@ -131,7 +132,7 @@ int main(int argc, char* argv[]) {
     }
 
     // 设置输入函数 u(t)
-    ode->setInputFunction(u);
+    ode->setInputFunction(inputFunction);
 
     // 选择求解器
     unique_ptr<OdeSolver> solver;

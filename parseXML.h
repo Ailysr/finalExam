@@ -9,6 +9,7 @@
 #include <memory>
 #include "ODE.h"
 #include "OdeSolver.h"
+#include "ExpressionParser.h"
 
 using namespace std;
 
@@ -16,12 +17,12 @@ using namespace std;
 
 static void parseXML(const string& xmlFile, string& selectedProblemType, vector<double>& coefficients, vector<double>& numerator,
    vector<double>& denominator, vector<vector<double>>& A, vector<double>& B, vector<double>& C, double& D,
-   vector<double>& initialState, double& dt, int& steps, int& solverOrder, string& solverType, string& resultPath) {
+   vector<double>& initialState, double& dt, int& steps, int& solverOrder, string& solverType, string& resultPath , function<double(double)>& inputFunction) {
    ifstream file(xmlFile);
    if (!file.is_open()) {
        throw runtime_error("Failed to open XML file");
    }
-
+   string inputFunctionExpr;
    string line;
 
    while (getline(file, line)) {
@@ -61,6 +62,27 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
                                        if (ss.peek() == ',') ss.ignore();
                                    }
                                }
+                               if (line.find("<inputFunction>") != string::npos) {
+                                   size_t start = line.find("<inputFunction>") + 15;
+                                   size_t end = line.find("</inputFunction>");
+                                   if (end != string::npos) {
+                                       inputFunctionExpr = line.substr(start, end - start);
+                                   }
+                                   else {
+                                       inputFunctionExpr = line.substr(start); // 可能是多行表达式，先读当前行剩余
+                                       string exprLine;
+                                       while (getline(file, exprLine)) {
+                                           size_t closing = exprLine.find("</inputFunction>");
+                                           if (closing != string::npos) {
+                                               inputFunctionExpr += exprLine.substr(0, closing);
+                                               break;
+                                           }
+                                           else {
+                                               inputFunctionExpr += exprLine;
+                                           }
+                                       }
+                                   }
+                               }
                                if (line.find("</problem>") != string::npos) {
                                    break; // 解析完成，退出循环
                                }
@@ -97,6 +119,27 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
                                    while (ss >> value) {
                                        initialState.push_back(value);
                                        if (ss.peek() == ',') ss.ignore();
+                                   }
+                               }
+                               if (line.find("<inputFunction>") != string::npos) {
+                                   size_t start = line.find("<inputFunction>") + 15;
+                                   size_t end = line.find("</inputFunction>");
+                                   if (end != string::npos) {
+                                       inputFunctionExpr = line.substr(start, end - start);
+                                   }
+                                   else {
+                                       inputFunctionExpr = line.substr(start); // 可能是多行表达式，先读当前行剩余
+                                       string exprLine;
+                                       while (getline(file, exprLine)) {
+                                           size_t closing = exprLine.find("</inputFunction>");
+                                           if (closing != string::npos) {
+                                               inputFunctionExpr += exprLine.substr(0, closing);
+                                               break;
+                                           }
+                                           else {
+                                               inputFunctionExpr += exprLine;
+                                           }
+                                       }
                                    }
                                }
                                if (line.find("</problem>") != string::npos) {
@@ -154,6 +197,27 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
                                    while (ss >> value) {
                                        initialState.push_back(value);
                                        if (ss.peek() == ',') ss.ignore();
+                                   }
+                               }
+                               if (line.find("<inputFunction>") != string::npos) {
+                                   size_t start = line.find("<inputFunction>") + 15;
+                                   size_t end = line.find("</inputFunction>");
+                                   if (end != string::npos) {
+                                       inputFunctionExpr = line.substr(start, end - start);
+                                   }
+                                   else {
+                                       inputFunctionExpr = line.substr(start); // 可能是多行表达式，先读当前行剩余
+                                       string exprLine;
+                                       while (getline(file, exprLine)) {
+                                           size_t closing = exprLine.find("</inputFunction>");
+                                           if (closing != string::npos) {
+                                               inputFunctionExpr += exprLine.substr(0, closing);
+                                               break;
+                                           }
+                                           else {
+                                               inputFunctionExpr += exprLine;
+                                           }
+                                       }
                                    }
                                }
                                if (line.find("</problem>") != string::npos) {
@@ -250,9 +314,18 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
                        for (const auto& val : initialState) {
                            cout << val << " ";
                        }
+                       inputFunction = [inputFunctionExpr](double t) {
+                           ExpressionParser parser(inputFunctionExpr);
+                           auto func = parser.compile();
+                           return func(t);
+                           };
                        cout << endl;
-                       cout << "The solverType is " << solverType << ", and solver order is " << solverOrder << endl;
-                       cout << "The steps is " << steps << ", and dt is " << dt << endl;
+                       cout << "Your Simulation Config:" << endl;
+                       cout << "solverType:" << solverType << endl;
+                       cout << "solver order:" << solverOrder << endl;
+					   cout << "Input Funciton:" << inputFunctionExpr << endl;
+                       cout << "steps:" << steps << endl;
+                       cout << "dt is:" << dt << endl;
                        file.close();
                        return; // 解析完成，退出函数
                    }
@@ -261,4 +334,4 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
        }
    }
    throw runtime_error("No problem with state=\"1\" found in the configuration file.");
-}
+};

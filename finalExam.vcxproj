@@ -133,6 +133,7 @@
     <ClCompile Include="parseXML.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="ExpressionParser.h" />
     <ClInclude Include="ODE.h" />
     <ClInclude Include="OdeSolver.h" />
   </ItemGroup>

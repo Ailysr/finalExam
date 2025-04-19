@@ -35,5 +35,8 @@
     <ClInclude Include="OdeSolver.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="ExpressionParser.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
