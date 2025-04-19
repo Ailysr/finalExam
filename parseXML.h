@@ -26,21 +26,21 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
    string line;
 
    while (getline(file, line)) {
-       // ¼ì²éÊÇ·ñÊÇ <problem> ±êÇ©
+       // æ£€æŸ¥æ˜¯å¦æ˜¯ <problem> æ ‡ç­¾
        if (line.find("<problem") != string::npos) {
-           // ¼ì²é state ÊôĞÔ
+           // æ£€æŸ¥ state å±æ€§
            size_t statePos = line.find("state=\"");
            if (statePos != string::npos) {
-               char state = line[statePos + 7]; // »ñÈ¡ state µÄÖµ
+               char state = line[statePos + 7]; // è·å– state çš„å€¼
                if (state == '1') {
-                   // »ñÈ¡ÎÊÌâÀàĞÍ
+                   // è·å–é—®é¢˜ç±»å‹
                    size_t typePos = line.find("type=\"");
                    if (typePos != string::npos) {
                        selectedProblemType = line.substr(typePos + 6, line.find("\"", typePos + 6) - (typePos + 6));
 
-                       // ¸ù¾İÎÊÌâÀàĞÍ½âÎöÏà¹ØÄÚÈİ
+                       // æ ¹æ®é—®é¢˜ç±»å‹è§£æç›¸å…³å†…å®¹
                        if (selectedProblemType == "SimpleODE") {
-                           // ½âÎö coefficients ºÍ initialState
+                           // è§£æ coefficients å’Œ initialState
                            while (getline(file, line)) {
                                if (line.find("<coefficients>") != string::npos) {
                                    string values = line.substr(line.find(">") + 1, line.rfind("<") - line.find(">") - 1);
@@ -69,7 +69,7 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
                                        inputFunctionExpr = line.substr(start, end - start);
                                    }
                                    else {
-                                       inputFunctionExpr = line.substr(start); // ¿ÉÄÜÊÇ¶àĞĞ±í´ïÊ½£¬ÏÈ¶Áµ±Ç°ĞĞÊ£Óà
+                                       inputFunctionExpr = line.substr(start); // å¯èƒ½æ˜¯å¤šè¡Œè¡¨è¾¾å¼ï¼Œå…ˆè¯»å½“å‰è¡Œå‰©ä½™
                                        string exprLine;
                                        while (getline(file, exprLine)) {
                                            size_t closing = exprLine.find("</inputFunction>");
@@ -84,12 +84,12 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
                                    }
                                }
                                if (line.find("</problem>") != string::npos) {
-                                   break; // ½âÎöÍê³É£¬ÍË³öÑ­»·
+                                   break; // è§£æå®Œæˆï¼Œé€€å‡ºå¾ªç¯
                                }
                            }
                        }
                        else if (selectedProblemType == "TransferFunction") {
-                           // ½âÎö numerator¡¢denominator ºÍ initialState
+                           // è§£æ numeratorã€denominator å’Œ initialState
                            while (getline(file, line)) {
                                if (line.find("<numerator>") != string::npos) {
                                    string values = line.substr(line.find(">") + 1, line.rfind("<") - line.find(">") - 1);
@@ -128,7 +128,7 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
                                        inputFunctionExpr = line.substr(start, end - start);
                                    }
                                    else {
-                                       inputFunctionExpr = line.substr(start); // ¿ÉÄÜÊÇ¶àĞĞ±í´ïÊ½£¬ÏÈ¶Áµ±Ç°ĞĞÊ£Óà
+                                       inputFunctionExpr = line.substr(start); // å¯èƒ½æ˜¯å¤šè¡Œè¡¨è¾¾å¼ï¼Œå…ˆè¯»å½“å‰è¡Œå‰©ä½™
                                        string exprLine;
                                        while (getline(file, exprLine)) {
                                            size_t closing = exprLine.find("</inputFunction>");
@@ -143,12 +143,12 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
                                    }
                                }
                                if (line.find("</problem>") != string::npos) {
-                                   break; // ½âÎöÍê³É£¬ÍË³öÑ­»·
+                                   break; // è§£æå®Œæˆï¼Œé€€å‡ºå¾ªç¯
                                }
                            }
                        }
                        else if (selectedProblemType == "StateSpace") {
-                           // ½âÎö A¡¢B¡¢C¡¢D ºÍ initialState
+                           // è§£æ Aã€Bã€Cã€D å’Œ initialState
                            while (getline(file, line)) {
                                if (line.find("<A>") != string::npos) {
                                    A.clear();
@@ -206,7 +206,7 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
                                        inputFunctionExpr = line.substr(start, end - start);
                                    }
                                    else {
-                                       inputFunctionExpr = line.substr(start); // ¿ÉÄÜÊÇ¶àĞĞ±í´ïÊ½£¬ÏÈ¶Áµ±Ç°ĞĞÊ£Óà
+                                       inputFunctionExpr = line.substr(start); // å¯èƒ½æ˜¯å¤šè¡Œè¡¨è¾¾å¼ï¼Œå…ˆè¯»å½“å‰è¡Œå‰©ä½™
                                        string exprLine;
                                        while (getline(file, exprLine)) {
                                            size_t closing = exprLine.find("</inputFunction>");
@@ -221,12 +221,12 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
                                    }
                                }
                                if (line.find("</problem>") != string::npos) {
-                                   break; // ½âÎöÍê³É£¬ÍË³öÑ­»·
+                                   break; // è§£æå®Œæˆï¼Œé€€å‡ºå¾ªç¯
                                }
                            }
                        }
 
-                       // ½âÎöÍêÎÊÌâÀàĞÍºó£¬¼ÌĞø½âÎö solver ĞÅÏ¢
+                       // è§£æå®Œé—®é¢˜ç±»å‹åï¼Œç»§ç»­è§£æ solver ä¿¡æ¯
                        while (getline(file, line)) {
                            if (line.find("<solver") != string::npos) {
                                size_t typePos = line.find("type=\"");
@@ -238,18 +238,18 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
                                }
                            }
                            if (line.find("<order>") != string::npos) {
-                               if (solverType != "Euler") { // Èç¹û²»ÊÇ Euler£¬½âÎö order ÊôĞÔ
-                                   size_t start = line.find("<order>") + 7; // ÕÒµ½ <order> µÄÆğÊ¼Î»ÖÃ
-                                   size_t end = line.find("</order>"); // ÕÒµ½ </order> µÄ½áÊøÎ»ÖÃ
+                               if (solverType != "Euler") { // å¦‚æœä¸æ˜¯ Eulerï¼Œè§£æ order å±æ€§
+                                   size_t start = line.find("<order>") + 7; // æ‰¾åˆ° <order> çš„èµ·å§‹ä½ç½®
+                                   size_t end = line.find("</order>"); // æ‰¾åˆ° </order> çš„ç»“æŸä½ç½®
                                    if (end != string::npos && start < end) {
-                                       solverOrder = stoi(line.substr(start, end - start)); // ÌáÈ¡²¢×ª»»ÎªÕûÊı
+                                       solverOrder = stoi(line.substr(start, end - start)); // æå–å¹¶è½¬æ¢ä¸ºæ•´æ•°
                                    }
                                    else {
                                        throw runtime_error("Invalid <order> tag format in XML.");
                                    }
                                }
                                else {
-                                   solverOrder = 1; // Euler Ä¬ÈÏ½×ÊıÎª 1
+                                   solverOrder = 1; // Euler é»˜è®¤é˜¶æ•°ä¸º 1
                                }
                            }
                            if (line.find("<dt>") != string::npos) {
@@ -260,11 +260,11 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
                                steps = stoi(line.substr(line.find(">") + 1, line.rfind("<") - line.find(">") - 1));
                            }
 
-                           // ½âÎö resultPath
+                           // è§£æ resultPath
                            if (line.find("<resultPath>") != string::npos) {
                                resultPath = line.substr(line.find(">") + 1, line.rfind("<") - line.find(">") - 1);
 
-                               break; // ½âÎöÍê³É£¬ÍË³öÑ­»·
+                               break; // è§£æå®Œæˆï¼Œé€€å‡ºå¾ªç¯
                            }
                        }
                        cout << "The problemType is " << selectedProblemType << endl;
@@ -323,11 +323,11 @@ static void parseXML(const string& xmlFile, string& selectedProblemType, vector<
                        cout << "Your Simulation Config:" << endl;
                        cout << "solverType:" << solverType << endl;
                        cout << "solver order:" << solverOrder << endl;
-					   cout << "Input Funciton:" << inputFunctionExpr << endl;
+					   cout << "Input Function:" << inputFunctionExpr << endl;
                        cout << "steps:" << steps << endl;
                        cout << "dt is:" << dt << endl;
                        file.close();
-                       return; // ½âÎöÍê³É£¬ÍË³öº¯Êı
+                       return; // è§£æå®Œæˆï¼Œé€€å‡ºå‡½æ•°
                    }
                }
            }
