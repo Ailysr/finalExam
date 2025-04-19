@@ -2,19 +2,19 @@
 
 using namespace std;
 
-// Í¨¹ı·Ö×Ó·ÖÄ¸¶àÏîÊ½µÄ¹¹Ôìº¯Êı
+// é€šè¿‡åˆ†å­åˆ†æ¯å¤šé¡¹å¼çš„æ„é€ å‡½æ•°
 TransferFunction::TransferFunction(const valarray<double>& numerator, const valarray<double>& denominator)
    : numerator(numerator), denominator(denominator) {
    if (denominator.size() == 0) {
        throw invalid_argument("Denominator must have at least one element");
    }
-   order = denominator.size() - 1; // ½×Êı
+   order = denominator.size() - 1; // ï¿½ï¿½ï¿½ï¿½
    tf2StateSpace();
 }
-// Í¨¹ı×´Ì¬¿Õ¼ä¾ØÕóµÄ¹¹Ôìº¯Êı
+// é€šè¿‡çŠ¶æ€ç©ºé—´çŸ©é˜µçš„æ„é€ å‡½æ•°
 TransferFunction::TransferFunction(const valarray<valarray<double>>& A, const valarray<double>& B, const valarray<double>& C, double D)
     : A(A), B(B), C(C), D(D) {
-    order = A.size(); // ½×Êı,AÒ»¶¨ÊÇ·½Õó
+    order = A.size(); // ï¿½ï¿½ï¿½ï¿½,AÒ»ï¿½ï¿½ï¿½Ç·ï¿½ï¿½ï¿½
 }
 
 pair<valarray<double>, valarray<double>> TransferFunction::polynomialDivision(
@@ -30,24 +30,24 @@ pair<valarray<double>, valarray<double>> TransferFunction::polynomialDivision(
 
     // quotient degree = deg_num - deg_den + 1 (if num is of higher degree)
     if (deg_num < deg_den) {
-        // ÉÌÎª 0£¬¶àÏîÊ½ÎŞ·¨Õû³ı
+        // å•†ä¸º 0ï¼Œå¤šé¡¹å¼æ— æ³•æ•´é™¤
         return { valarray<double>(0.0, 1), remainder };
     }
 
     valarray<double> quotient(0.0, deg_num - deg_den + 1);
 
     for (size_t i = 0; i <= deg_num - deg_den; ++i) {
-        // µ±Ç°±»³ıÏîµÄÏµÊı
+        // å½“å‰è¢«é™¤é¡¹çš„ç³»æ•°
         double coeff = remainder[i] / den[0];
         quotient[i] = coeff;
 
-        // ¹¹Ôìµ±Ç°³ı·¨½á¹û³ËÒÔ³ıÊ½µÄ¶àÏîÊ½£¬×ö¼õ·¨
+        // æ„é€ å½“å‰é™¤æ³•ç»“æœä¹˜ä»¥é™¤å¼çš„å¤šé¡¹å¼ï¼Œåšå‡æ³•
         for (size_t j = 0; j <= deg_den; ++j) {
             remainder[i + j] -= coeff * den[j];
         }
     }
 
-    // ½ØÈ¡ÓàÊı²¿·Ö£¨´Ó quotient Ö®ºóµÄÏî£©
+    // æˆªå–ä½™æ•°éƒ¨åˆ†ï¼ˆä» quotient ä¹‹åçš„é¡¹ï¼‰
     size_t remainder_start = deg_num - deg_den + 1;
     valarray<double> real_remainder = remainder[remainder_start != remainder.size() ? slice(remainder_start, remainder.size() - remainder_start, 1) : slice(0, 0, 1)];
 
@@ -55,21 +55,21 @@ pair<valarray<double>, valarray<double>> TransferFunction::polynomialDivision(
 }
 
 void TransferFunction::tf2StateSpace() {
-    size_t n = denominator.size() - 1; // ÏµÍ³µÄ½×Êı
+    size_t n = denominator.size() - 1; // ç³»ç»Ÿçš„é˜¶æ•°
     
     pair<valarray<double>, valarray<double>> result = polynomialDivision(numerator, denominator);
     valarray<double> q = result.first;
     valarray<double> r = result.second;
-    size_t m = r.size() - 1;   // ·Ö×ÓµÄ½×Êı
+    size_t m = r.size() - 1;   // åˆ†å­çš„é˜¶æ•°
 
-    // ³õÊ¼»¯×´Ì¬¿Õ¼ä¾ØÕó
+    // åˆå§‹åŒ–çŠ¶æ€ç©ºé—´çŸ©é˜µ
     A.resize(n, valarray<double>(n));
     B.resize(n);
     C.resize(n);
-    // ¼ÆËã D
+    // è®¡ç®— D
 	D = q[0];
 
-    // Ìî³ä¾ØÕó A
+    // å¡«å……çŸ©é˜µ A
     for (size_t i = 0; i < n; ++i) {
         for (size_t j = 0; j < n; ++j) {
             if (i == n - 1) {
@@ -84,7 +84,7 @@ void TransferFunction::tf2StateSpace() {
         }
     }
 
-    // Ìî³ä¾ØÕó B
+    // å¡«å……çŸ©é˜µ B
     for (size_t i = 0; i < n; ++i) {
         if (i == n - 1) {
             B[i] = 1.0 ;
@@ -94,7 +94,7 @@ void TransferFunction::tf2StateSpace() {
         }
     }
 
-    // Ìî³ä¾ØÕó C
+    // å¡«å……çŸ©é˜µ C
 	
     for (size_t i = 0; i < n; ++i) {
         if (i <= m) {
@@ -128,11 +128,11 @@ SimpleODE::SimpleODE(const valarray<double>& coefficients) : coefficients(coeffi
 	if (coefficients.size() == 0) {
 		throw invalid_argument("Coefficients must have at least one element");
 	}
-	order = coefficients.size() - 1; // ½×Êı
-	numerator = valarray<double>{ 1.0 }; // ·Ö×ÓÎª1
-	denominator = coefficients; // ·ÖÄ¸ÎªÎ¢·Ö·½³ÌµÄÏµÊı
-	TransferFunction tf(numerator, denominator); // Í¨¹ı·Ö×Ó·ÖÄ¸¶àÏîÊ½µÄ¹¹Ôìº¯Êı£¬×ÔÈ»»á×ª»¯Îª×´Ì¬¿Õ¼äÄ£ĞÍ
-	// Í¨¹ı×´Ì¬¿Õ¼ä¾ØÕóµÄ¹¹Ôìº¯Êı
+	order = coefficients.size() - 1; // ï¿½ï¿½ï¿½ï¿½
+	numerator = valarray<double>{ 1.0 }; // ï¿½ï¿½ï¿½ï¿½Îª1
+	denominator = coefficients; // ï¿½ï¿½Ä¸ÎªÎ¢ï¿½Ö·ï¿½ï¿½Ìµï¿½Ïµï¿½ï¿½
+	TransferFunction tf(numerator, denominator); // Í¨ï¿½ï¿½ï¿½ï¿½ï¿½Ó·ï¿½Ä¸ï¿½ï¿½ï¿½ï¿½Ê½ï¿½Ä¹ï¿½ï¿½ìº¯ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½È»ï¿½ï¿½×ªï¿½ï¿½Îª×´Ì¬ï¿½Õ¼ï¿½Ä£ï¿½ï¿½
+	// Í¨ï¿½ï¿½×´Ì¬ï¿½Õ¼ï¿½ï¿½ï¿½ï¿½Ä¹ï¿½ï¿½ìº¯ï¿½ï¿½
 	A = tf.getA();
 	B = tf.getB();
 	C = tf.getC();
@@ -157,6 +157,6 @@ valarray<double> SimpleODE::f(const valarray<double>& x, double t) {
     }
     return dxdt;
 }
-double SimpleODE::output(const valarray<double>& x, double t) {// Êä³ö¿ÉÒÔÊÇ×´Ì¬±äÁ¿µÄÄ³ÖÖ×éºÏ£¬ÀıÈçÖ±½Ó·µ»Ø x[0]£¨Î»ÖÃ£©
+double SimpleODE::output(const valarray<double>& x, double t) {// ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½×´Ì¬ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ä³ï¿½ï¿½ï¿½ï¿½Ï£ï¿½ï¿½ï¿½ï¿½ï¿½Ö±ï¿½Ó·ï¿½ï¿½ï¿½ x[0]ï¿½ï¿½Î»ï¿½Ã£ï¿½
     return (C * x).sum() + D * u(t);
 };
